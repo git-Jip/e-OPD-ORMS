@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
@@ -11,24 +11,30 @@ export const GOOGLE_SIGN_IN_RETURN_KEY = 'e-opd-google-sign-in-return'
 type AuthPanelProps = {
   mode: AuthMode
   onModeChange: (mode: AuthMode) => void
+  onVerificationPendingChange?: (pending: boolean) => void
   patientDetails?: PatientDetails | null
   patientType?: 'new' | 'existing'
   registrationLayout?: boolean
   loginLayout?: boolean
+  redirectAuthenticated?: boolean
 }
 
 const inputClass = 'mt-2 w-full rounded-xl border border-hairline bg-white px-4 py-3 text-ink focus:outline-2 focus:outline-accent-700'
 
-export function AuthPanel({ mode, onModeChange, patientDetails, patientType, registrationLayout = false, loginLayout = false }: AuthPanelProps) {
+export function AuthPanel({ mode, onModeChange, onVerificationPendingChange, patientDetails, patientType, registrationLayout = false, loginLayout = false, redirectAuthenticated = false }: AuthPanelProps) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [profileLoading, setProfileLoading] = useState(false)
+  const [profileReady, setProfileReady] = useState(false)
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [verificationEmail, setVerificationEmail] = useState('')
+  const [verificationCode, setVerificationCode] = useState('')
+  const signupInProgress = useRef(false)
   const [error, setError] = useState(() => loginLayout
     ? new URLSearchParams(window.location.hash.slice(1)).get('error_description') ?? ''
     : '')
@@ -47,10 +53,14 @@ export function AuthPanel({ mode, onModeChange, patientDetails, patientType, reg
 
     function updateSession(nextUser: User | null) {
       if (!active) return
+      if (nextUser && signupInProgress.current) return
       setUser(nextUser)
       if (nextUser) {
         setFullName(typeof nextUser.user_metadata.full_name === 'string' ? nextUser.user_metadata.full_name.trim() : '')
         setProfileLoading(true)
+        setProfileReady(false)
+      } else {
+        setProfileReady(false)
       }
       setLoading(false)
     }
@@ -119,8 +129,12 @@ export function AuthPanel({ mode, onModeChange, patientDetails, patientType, reg
           }, { onConflict: 'id', ignoreDuplicates: true })
           if (patientError) throw patientError
         }
+        if (active) setProfileReady(true)
       } catch {
-        if (active) setError('Your profile could not be completed. Sign in again to retry.')
+        if (active) {
+          setProfileReady(false)
+          setError('Your profile could not be completed. Sign in again to retry.')
+        }
       } finally {
         if (active) setProfileLoading(false)
       }
@@ -129,6 +143,12 @@ export function AuthPanel({ mode, onModeChange, patientDetails, patientType, reg
     void loadProfile()
     return () => { active = false }
   }, [user])
+
+  useEffect(() => {
+    if (user && profileReady && redirectAuthenticated) {
+      window.location.replace('/patient/dashboard')
+    }
+  }, [user, profileReady, redirectAuthenticated])
 
   async function submitAuth(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -146,6 +166,7 @@ export function AuthPanel({ mode, onModeChange, patientDetails, patientType, reg
           setError('Enter your full name.')
           return
         }
+        signupInProgress.current = true
         const { data, error: authError } = await supabase.auth.signUp({
           email: email.trim(),
           password,
@@ -156,9 +177,14 @@ export function AuthPanel({ mode, onModeChange, patientDetails, patientType, reg
         })
         if (authError) throw authError
         setPassword('')
-        if (!data.session) {
-          setMessage('Check your email to confirm your account, then sign in. If you already have an account, sign in with your existing password.')
+        if (data.session) {
+          await supabase.auth.signOut({ scope: 'local' })
+          throw new Error('Email confirmation must be enabled in Supabase before patient registration.')
         }
+        setVerificationEmail(email.trim())
+        setVerificationCode('')
+        onVerificationPendingChange?.(true)
+        setMessage('If this is a new account, check your email and Spam folder for a verification code or confirmation link. If you have used this email before, sign in or reset your password instead.')
       } else {
         const { error: authError } = await supabase.auth.signInWithPassword({
           email: email.trim(), password,
@@ -168,6 +194,50 @@ export function AuthPanel({ mode, onModeChange, patientDetails, patientType, reg
       }
     } catch (authError) {
       setError(authError instanceof Error ? authError.message : 'We could not connect. Please try again.')
+    } finally {
+      signupInProgress.current = false
+      setBusy(false)
+    }
+  }
+
+  async function verifyEmail(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setBusy(true)
+    setError('')
+    setMessage('')
+    try {
+      const { data, error: verifyError } = await supabase.auth.verifyOtp({
+        email: verificationEmail,
+        token: verificationCode.trim(),
+        type: 'email',
+      })
+      if (verifyError) throw verifyError
+      if (!data.session) throw new Error('Email verification did not start a session. Please sign in.')
+      setVerificationCode('')
+      setVerificationEmail('')
+      onVerificationPendingChange?.(false)
+      setMessage('Email verified.')
+    } catch (verifyError) {
+      setError(verifyError instanceof Error ? verifyError.message : 'The code could not be verified. Please try again.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function resendVerification() {
+    setBusy(true)
+    setError('')
+    setMessage('')
+    try {
+      const { error: resendError } = await supabase.auth.resend({
+        type: 'signup',
+        email: verificationEmail,
+        options: { emailRedirectTo: `${window.location.origin}/` },
+      })
+      if (resendError) throw resendError
+      setMessage('If this address is awaiting confirmation, a new verification email has been sent.')
+    } catch (resendError) {
+      setError(resendError instanceof Error ? resendError.message : 'The verification email could not be resent. Please try again.')
     } finally {
       setBusy(false)
     }
@@ -274,9 +344,11 @@ export function AuthPanel({ mode, onModeChange, patientDetails, patientType, reg
       {error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-800">{error}</p>}
       {message && <p role="status" className="mt-4 rounded-xl bg-green-50 p-3 text-sm text-green-800">{message}</p>}
 
-      {loading ? <p role="status" className="mt-6">Checking your account…</p> : user ? (
+      {loading ? <p role="status" className="mt-6">Checking your account…</p> : user && redirectAuthenticated && (profileLoading || profileReady) ? (
+        <p role="status" className="mt-6">Opening your patient dashboard…</p>
+      ) : user ? (
         <>
-          <a href="/patient/dashboard" className="landing-cta mt-6 flex w-full items-center justify-center text-center">Open patient dashboard</a>
+          {profileLoading ? <p role="status" className="mt-6 text-sm text-ink-soft">Finishing your patient profile…</p> : profileReady && <a href="/patient/dashboard" className="landing-cta mt-6 flex w-full items-center justify-center text-center">Open patient dashboard</a>}
           <form onSubmit={saveProfile} className="mt-6 space-y-4">
             <label className="block text-sm font-medium text-ink" htmlFor="profile-name">
               Full name
@@ -287,6 +359,19 @@ export function AuthPanel({ mode, onModeChange, patientDetails, patientType, reg
             </button>
           </form>
           <button type="button" onClick={() => void signOut()} disabled={busy || profileLoading} className="landing-secondary mt-3 w-full">Sign out</button>
+        </>
+      ) : mode === 'signup' && verificationEmail ? (
+        <>
+          <form onSubmit={verifyEmail} className={registrationLayout ? 'mt-9 space-y-6' : 'mt-6 space-y-4'}>
+            <p className="text-sm leading-relaxed text-ink-soft">Enter the verification code for <strong className="text-ink">{verificationEmail}</strong>. If the email contains a confirmation link, you can use that instead.</p>
+            <label className="block text-sm font-medium text-ink" htmlFor="auth-verification-code">
+              Email verification code
+              <input id="auth-verification-code" name="verificationCode" type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]+" title="Enter the digits from your verification email" value={verificationCode} onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, ''))} required disabled={busy} className={inputClass} />
+            </label>
+            <button type="submit" disabled={busy} className="landing-cta w-full">{busy ? 'Please wait…' : 'Create Account'}</button>
+          </form>
+          <button type="button" disabled={busy} onClick={() => void resendVerification()} className="mt-5 w-full text-sm font-semibold text-accent-700 underline underline-offset-4">Resend verification email</button>
+          <p className="mt-5 text-center text-sm text-ink-soft">Already verified? <a href="/login" className="font-semibold text-accent-700 hover:underline">Sign in</a></p>
         </>
       ) : (
         <>
@@ -317,10 +402,10 @@ export function AuthPanel({ mode, onModeChange, patientDetails, patientType, reg
             {mode === 'signup' && <p id="password-help" className="text-sm text-ink-soft">Use at least 8 characters.</p>}
             {mode === 'signup' && registrationLayout && <div className="flex items-start gap-2 text-sm leading-relaxed text-ink">
               <input id="auth-terms" name="terms" type="checkbox" checked={acceptedTerms} onChange={(event) => setAcceptedTerms(event.target.checked)} required disabled={busy} aria-label="I agree to the Terms and Conditions and acknowledge the Privacy Notice" className="mt-1 h-4 w-4 accent-accent-700" />
-              <span><label htmlFor="auth-terms">I agree to the </label><a href="/terms" target="_blank" rel="noopener noreferrer" className="text-accent-700 underline underline-offset-2">Terms and Conditions</a> and acknowledge the <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-accent-700 underline underline-offset-2">Privacy Notice</a>.</span>
+              <span><label htmlFor="auth-terms">I agree to the </label><a href="/terms" className="text-accent-700 underline underline-offset-2">Terms and Conditions</a> and acknowledge the <a href="/privacy" className="text-accent-700 underline underline-offset-2">Privacy Notice</a>.</span>
             </div>}
-            <button type="submit" disabled={busy} className="landing-cta w-full">
-              {busy ? 'Please wait…' : mode === 'signup' ? registrationLayout ? 'Continue' : 'Create account' : loginLayout ? 'Sign in with password' : 'Sign in'}
+            <button type="submit" disabled={busy || (mode === 'signup' && registrationLayout && !acceptedTerms)} className="landing-cta w-full disabled:cursor-not-allowed">
+              {busy ? 'Please wait…' : mode === 'signup' ? 'Send verification email' : loginLayout ? 'Sign in with password' : 'Sign in'}
               {mode === 'signup' && registrationLayout && <span aria-hidden="true" className="ml-2">›</span>}
             </button>
           </form>
@@ -348,9 +433,6 @@ export function AuthPanel({ mode, onModeChange, patientDetails, patientType, reg
           </p> : <button type="button" disabled={busy} onClick={switchMode} className="mt-5 w-full text-sm font-semibold text-accent-700 underline underline-offset-4">
             {mode === 'signup' ? 'Already have an account? Sign in' : 'Need an account? Register'}
           </button>}
-          {loginLayout && <p className="mt-6 rounded-xl border border-green-200 bg-green-50 p-4 text-center text-xs leading-5 text-green-950">
-            Patients can sign in with a password or Google. New email accounts must confirm their email address.
-          </p>}
         </>
       )}
     </>

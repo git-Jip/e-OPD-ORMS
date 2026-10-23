@@ -11,7 +11,7 @@ const FAQ_GROUPS = [
       },
       {
         question: 'How do I create an account?',
-        answer: 'Select Create Account on the landing page and choose your patient type. Enter your name, contact number, birth date, optional gender, and address. Existing hospital patients may also enter their last visit date and previous doctor. Then enter an email address and a password with at least 8 characters, review the Terms and Privacy Notice, and continue. Follow the confirmation link sent to your email, then sign in.',
+        answer: 'Select Create Account on the landing page and choose your patient type. Enter your name, contact number, birth date, optional gender, and address. Existing hospital patients may also enter their last visit date and previous doctor. Then enter your email and a password with at least 8 characters, review the Terms and Privacy Notice, and request a verification email. Enter its code and select Create Account, or use the confirmation link in the email. Your patient profile is saved after verification.',
       },
       {
         question: 'Does choosing Existing hospital patient link my hospital record?',

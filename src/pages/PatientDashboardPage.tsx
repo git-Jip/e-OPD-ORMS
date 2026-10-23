@@ -180,13 +180,13 @@ export function PatientDashboardPage() {
                 <span className="grid h-10 w-10 place-items-center rounded-lg bg-accent-cta text-xs font-bold text-white">{initials}</span>
                 <span className="hidden max-w-40 sm:block">
                   <span className="block truncate text-sm font-semibold">{name}</span>
-                  <span className="block truncate text-xs text-ink-soft">My account</span>
+                  <span className="block truncate text-xs text-ink-soft">Patient</span>
                 </span>
                 <span aria-hidden="true" className="px-1 text-ink-soft">⌄</span>
               </summary>
               <div className="absolute right-0 mt-2 w-64 rounded-2xl border border-hairline bg-white p-2 shadow-xl">
                 <p className="truncate px-3 py-2 text-xs text-ink-soft" title={user.email ?? undefined}>{user.email}</p>
-                <a href="/login" className="block rounded-lg px-3 py-2 text-sm font-medium hover:bg-canvas-muted">Manage account</a>
+                <a href="/account" className="block rounded-lg px-3 py-2 text-sm font-medium hover:bg-canvas-muted">Manage account</a>
                 <button type="button" disabled={signingOut} onClick={() => void signOut()} className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium hover:bg-canvas-muted disabled:opacity-60">{signingOut ? 'Signing out…' : 'Sign out'}</button>
               </div>
             </details>
@@ -210,7 +210,7 @@ export function PatientDashboardPage() {
                 <h1 id="welcome-title" className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl xl:text-5xl">{greetingFor(today)}, {firstName}.</h1>
                 <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-soft sm:text-base">Your account is ready. Visit and queue information will appear here when those services are available.</p>
               </div>
-              <a href="/login" className="landing-cta inline-flex items-center gap-3 text-sm">Manage account <span aria-hidden="true">→</span></a>
+              <a href="/account" className="landing-cta inline-flex items-center gap-3 text-sm">Manage account <span aria-hidden="true">→</span></a>
             </div>
           </section>
 

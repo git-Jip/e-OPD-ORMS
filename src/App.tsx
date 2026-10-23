@@ -27,8 +27,8 @@ function AuthReturn({ recovery = false }: { recovery?: boolean }) {
 function App() {
   const path = window.location.pathname.replace(/\/+$/, '')
 
-  if (path === '/login') {
-    return <><a className="skip-link" href="#main-content">Skip to content</a><LoginPage /></>
+  if (path === '/login' || path === '/account') {
+    return <><a className="skip-link" href="#main-content">Skip to content</a><LoginPage accountPage={path === '/account'} /></>
   }
 
   if (path === '/reset-password') {

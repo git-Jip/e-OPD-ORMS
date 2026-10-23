@@ -65,7 +65,10 @@ birth date, optional gender, and address before account setup. Existing patients
 may also provide their last visit date and previous doctor. Neither choice verifies or links
 hospital records. Both forms continue to a Supabase email/password account step
 with a patient-type summary, a required Terms and Conditions acknowledgement,
-and links to the legal pages. Sign-in opens `/login` with password and Google
+and links that open the Terms and Privacy Notice in an in-page dialog. After
+submitting the details, patients enter the email verification code before the
+patient profile is created. The confirmation link remains an alternative.
+The direct `/terms` and `/privacy` URLs remain available. Sign-in opens `/login` with password and Google
 options; there is no email-code sign-in option. Both account surfaces support email
 confirmation, session restoration, local sign-out, and editing the signed-in
 user's full name. The signed-in account view links to `/patient/dashboard`.
@@ -83,7 +86,7 @@ links to official privacy information. Legal pages carry a last-updated date;
 the FAQ has no legal effective-date line.
 
 The signup and sign-in pages support direct navigation and reloads. A static deployment
-must rewrite `/signup`, `/login`, `/reset-password`, `/patient/dashboard`, `/faq`, `/terms`, and `/privacy` (including trailing-slash
+must rewrite `/signup`, `/login`, `/account`, `/reset-password`, `/patient/dashboard`, `/faq`, `/terms`, and `/privacy` (including trailing-slash
 variants) to `/index.html` with status 200.
 
 The `public.profiles` table was created directly in the Supabase SQL Editor,
@@ -106,7 +109,13 @@ Supabase Auth's Site URL is `http://localhost:5173`, with
 root URL and then opens `/login` after Supabase restores the session. Password
 recovery also returns to the allowed root URL before opening `/reset-password`.
 Update the Site URL and add the deployed site's exact root URL when deploying.
-Keep email confirmation enabled. The
+Keep email confirmation enabled. In Supabase Authentication > Email Templates >
+Confirm sign up, include `{{ .Token }}` so the verification code is present in
+the email. Keep `{{ .ConfirmationURL }}` if patients should also be able to use
+the confirmation link. The first signup request creates a pending Supabase Auth
+user; the public patient profile is saved after email verification when the
+confirmed user opens the account form. If email confirmation is disabled, Supabase can grant a
+session immediately, which bypasses this intended verification step. The
 default Supabase email service has delivery restrictions; configure custom SMTP
 before opening registration to patients.
 

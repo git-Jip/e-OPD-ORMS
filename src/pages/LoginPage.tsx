@@ -3,7 +3,7 @@ import { HospitalLogo } from '../components/common/HospitalLogo'
 import { LegalLinks } from '../components/common/LegalLinks'
 import hospitalPhoto from '../assets/landing-hospital-bg.webp'
 
-export function LoginPage() {
+export function LoginPage({ accountPage = false }: { accountPage?: boolean }) {
   return (
     <div className="signup-page min-h-screen bg-white text-ink">
       <header className="signup-header">
@@ -16,9 +16,9 @@ export function LoginPage() {
       <main id="main-content" tabIndex={-1} className="signup-layout login-layout">
         <section className="signup-intro" aria-labelledby="login-welcome-title">
           <div className="mx-auto w-full max-w-[40rem]">
-            <h1 id="login-welcome-title" className="signup-title font-semibold tracking-tight">Welcome to e-OPD</h1>
+            <h1 id="login-welcome-title" className="signup-title font-semibold tracking-tight">{accountPage ? 'Manage your account' : 'Welcome to e-OPD'}</h1>
             <p className="mt-5 text-lg leading-relaxed text-ink-soft sm:text-xl">
-              Sign in to manage your e-OPD account and patient information.
+              {accountPage ? 'Review and update your e-OPD account details.' : 'Sign in to manage your e-OPD account and patient information.'}
             </p>
             <img
               src={hospitalPhoto}
@@ -40,7 +40,7 @@ export function LoginPage() {
 
         <section className="signup-content" aria-label="Sign in">
           <div className="w-full max-w-[31rem]">
-            <AuthPanel mode="login" onModeChange={() => window.location.assign('/signup')} loginLayout />
+            <AuthPanel mode="login" onModeChange={() => window.location.assign('/signup')} loginLayout redirectAuthenticated={!accountPage} />
             <div className="mt-7 border-t border-hairline pt-5 text-center text-xs text-ink-soft">
               <p>Use of e-OPD is governed by the hospital&apos;s policies.</p>
               <LegalLinks className="mt-3" />

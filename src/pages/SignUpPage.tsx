@@ -26,6 +26,7 @@ export function SignUpPage() {
   const [authMode, setAuthMode] = useState<'signup' | 'login'>('signup')
   const [accountStep, setAccountStep] = useState(false)
   const [patientDetails, setPatientDetails] = useState<PatientDetails | null>(null)
+  const [verificationPending, setVerificationPending] = useState(false)
 
   function returnToChoices() {
     setPatientType(null)
@@ -79,10 +80,10 @@ export function SignUpPage() {
               <div>
                 <div className="signup-account-summary">
                   <span className="font-medium">{patientChoices.find((choice) => choice.type === patientType)?.title}</span>
-                  <button type="button" onClick={() => setAccountStep(false)} className="font-semibold text-accent-700 underline underline-offset-2">Edit patient information</button>
+                  {!verificationPending && <button type="button" onClick={() => setAccountStep(false)} className="font-semibold text-accent-700 underline underline-offset-2">Edit patient information</button>}
                 </div>
                 <div className="mx-auto mt-6 w-full max-w-[30.75rem]">
-                  <AuthPanel mode={authMode} onModeChange={setAuthMode} patientDetails={patientDetails} patientType={patientType} registrationLayout />
+                  <AuthPanel mode={authMode} onModeChange={setAuthMode} onVerificationPendingChange={setVerificationPending} patientDetails={patientDetails} patientType={patientType} registrationLayout redirectAuthenticated />
                 </div>
               </div>
             ) : (

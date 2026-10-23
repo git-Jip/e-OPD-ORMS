@@ -1,4 +1,6 @@
 // Adapted from the original e-OPD LegalPages.jsx for this revision's implemented features.
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { LegalShell } from '../../components/common/PublicDocumentLayout'
 
 function TermsContent() {
@@ -277,26 +279,136 @@ function PrivacyContent() {
   )
 }
 
+const legalDocuments = {
+  terms: {
+    eyebrow: 'Patient portal policy',
+    title: 'Terms and Conditions',
+    summary: 'Rules for the account registration, sign-in, and profile features currently available in e-OPD.',
+    Content: TermsContent,
+  },
+  privacy: {
+    eyebrow: 'Data privacy',
+    title: 'Privacy Notice',
+    summary: 'How Balayan Bayview Hospital and Medical Center processes account and profile information in this version of e-OPD.',
+    Content: PrivacyContent,
+  },
+} as const
+
+type LegalDocumentKey = keyof typeof legalDocuments
+
 export function TermsPage() {
+  const { Content, eyebrow, title, summary } = legalDocuments.terms
   return (
     <LegalShell
-      eyebrow="Patient portal policy"
-      title="Terms and Conditions"
-      summary="Rules for the account registration, sign-in, and profile features currently available in e-OPD."
+      eyebrow={eyebrow}
+      title={title}
+      summary={summary}
     >
-      <TermsContent />
+      <Content />
     </LegalShell>
   )
 }
 
 export function PrivacyPage() {
+  const { Content, eyebrow, title, summary } = legalDocuments.privacy
   return (
     <LegalShell
-      eyebrow="Data privacy"
-      title="Privacy Notice"
-      summary="How Balayan Bayview Hospital and Medical Center processes account and profile information in this version of e-OPD."
+      eyebrow={eyebrow}
+      title={title}
+      summary={summary}
     >
-      <PrivacyContent />
+      <Content />
     </LegalShell>
   )
+}
+
+function LegalDocumentModal({ documentKey, onClose }: { documentKey: LegalDocumentKey; onClose: () => void }) {
+  const dialogRef = useRef<HTMLDialogElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const { Content, eyebrow, title, summary } = legalDocuments[documentKey]
+
+  useEffect(() => {
+    const dialog = dialogRef.current
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    dialog?.showModal()
+    closeButtonRef.current?.focus()
+
+    return () => {
+      if (dialog?.open) dialog.close()
+      document.body.style.overflow = previousOverflow
+      if (previouslyFocused?.isConnected) previouslyFocused.focus()
+    }
+  }, [])
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0 })
+    closeButtonRef.current?.focus()
+  }, [documentKey])
+
+  return createPortal(
+    <dialog
+      ref={dialogRef}
+      aria-labelledby="legal-modal-title"
+      aria-describedby="legal-modal-summary"
+      onCancel={(event) => { event.preventDefault(); onClose() }}
+      onClick={(event) => {
+        const bounds = event.currentTarget.getBoundingClientRect()
+        if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) {
+          onClose()
+        }
+      }}
+      className="fixed inset-0 m-auto max-h-[calc(100dvh-1rem)] w-[calc(100%-1rem)] max-w-3xl flex-col overflow-hidden rounded-2xl border border-hairline bg-white p-0 text-ink shadow-2xl backdrop:bg-black/60 open:flex sm:max-h-[calc(100dvh-3rem)]"
+    >
+      <header className="flex shrink-0 items-start justify-between gap-4 border-b border-hairline px-5 py-4 sm:px-6">
+        <div>
+          <p className="text-sm font-semibold text-accent-700">{eyebrow}</p>
+          <h2 id="legal-modal-title" className="mt-1 text-xl font-semibold tracking-tight">{title}</h2>
+          <p className="mt-1 text-sm text-ink-soft">Last updated: October 23, 2026</p>
+        </div>
+        <button
+          ref={closeButtonRef}
+          type="button"
+          onClick={onClose}
+          aria-label={`Close ${title}`}
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-2xl text-ink-soft hover:bg-canvas-muted hover:text-ink"
+        >
+          ×
+        </button>
+      </header>
+      <div ref={scrollRef} className="min-h-0 flex-1 overscroll-contain overflow-y-auto px-5 py-5 sm:px-6">
+        <p id="legal-modal-summary" className="text-sm leading-6 text-ink-soft">{summary}</p>
+        <div className="legal-document mt-5"><Content /></div>
+      </div>
+    </dialog>,
+    document.body,
+  )
+}
+
+export function LegalDocumentModalHost() {
+  const [documentKey, setDocumentKey] = useState<LegalDocumentKey | null>(null)
+
+  useEffect(() => {
+    function openLegalLink(event: MouseEvent) {
+      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+      const anchor = event.target instanceof Element ? event.target.closest('a[href]') : null
+      if (!anchor) return
+      const url = new URL(anchor.getAttribute('href') ?? '', window.location.href)
+      if (url.origin !== window.location.origin) return
+      const path = url.pathname.replace(/\/+$/, '')
+      if (path !== '/terms' && path !== '/privacy') return
+
+      event.preventDefault()
+      setDocumentKey(path === '/terms' ? 'terms' : 'privacy')
+    }
+
+    document.addEventListener('click', openLegalLink, true)
+    return () => document.removeEventListener('click', openLegalLink, true)
+  }, [])
+
+  return documentKey
+    ? <LegalDocumentModal documentKey={documentKey} onClose={() => setDocumentKey(null)} />
+    : null
 }
