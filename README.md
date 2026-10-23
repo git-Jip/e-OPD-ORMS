@@ -25,7 +25,9 @@ Open the local URL printed by Vite, usually http://localhost:5173.
 
 Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` in `.env.local`
 before starting the server. Use the publishable key from the intended Supabase
-project. The checked-out local setup connects to **e-OPD-ORMS**.
+project. After replacing a Supabase project, update `.env.local` and the hosting
+environment with the new project's URL and publishable key; the deleted project's
+settings no longer work.
 
 ## Commands
 
@@ -89,14 +91,20 @@ The signup and sign-in pages support direct navigation and reloads. A static dep
 must rewrite `/signup`, `/login`, `/account`, `/reset-password`, `/patient/dashboard`, `/faq`, `/terms`, and `/privacy` (including trailing-slash
 variants) to `/index.html` with status 200.
 
-The `public.profiles` table was created directly in the Supabase SQL Editor,
-without a migration file. It contains the Auth user ID, full name, and creation
-time. RLS restricts select, insert, and update operations to the signed-in user's
-own row; anonymous access is revoked. The profile is created when a confirmed
-user opens an account form, using the signup name as display data only.
-The `public.patient_profiles` table was also created directly in the SQL Editor.
-It holds the details from either patient-information form, including optional
-last-visit details for existing patients, and restricts read and insert
+The schema for a new Supabase project is in `supabase/bootstrap.sql`.
+Run it once in the replacement project's SQL Editor before registering patients.
+Check that neither table already exists before running it. This one-time setup
+is outside the Supabase CLI migration history; do not later move the same SQL
+into `supabase/migrations` and push it again to an existing database.
+It recreates only the tables used by this revision; it does not restore deleted
+Auth users, passwords, rows, or storage objects. `public.profiles` contains the
+Auth user ID, full name, and creation time. RLS restricts select, insert, and
+update operations to the signed-in user's own row; anonymous access is revoked.
+The profile is created when a confirmed user opens an account form, using the
+signup name as display data only.
+The `public.patient_profiles` table holds the details from either
+patient-information form, including optional last-visit details for existing
+patients, and restricts read and insert
 access to the signed-in account owner. There is no public or anonymous access,
 and the portal does not provide online editing for these details. Signup carries
 the details through Supabase Auth metadata until a confirmed user signs in and
@@ -104,11 +112,13 @@ the account form saves the row. If saving fails, opening the account form again
 retries it. The table is an online account profile, not a hospital patient record.
 Staff roles and permissions are not stored in user-editable metadata.
 
-Supabase Auth's Site URL is `http://localhost:5173`, with
-`http://localhost:5173/` allowed as a redirect. Google sign-in returns to that
+Set Supabase Auth's Site URL to `http://localhost:5173`, and allow
+`http://localhost:5173/` as a redirect. Google sign-in returns to that
 root URL and then opens `/login` after Supabase restores the session. Password
 recovery also returns to the allowed root URL before opening `/reset-password`.
 Update the Site URL and add the deployed site's exact root URL when deploying.
+Enable and configure Google sign-in again in the replacement Supabase project;
+provider settings from the deleted project are not part of the table setup.
 Keep email confirmation enabled. In Supabase Authentication > Email Templates >
 Confirm sign up, include `{{ .Token }}` so the verification code is present in
 the email. Keep `{{ .ConfirmationURL }}` if patients should also be able to use
