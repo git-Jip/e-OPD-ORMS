@@ -276,6 +276,7 @@ export function AuthPanel({ mode, onModeChange, patientDetails, patientType, reg
 
       {loading ? <p role="status" className="mt-6">Checking your account…</p> : user ? (
         <>
+          <a href="/patient/dashboard" className="landing-cta mt-6 flex w-full items-center justify-center text-center">Open patient dashboard</a>
           <form onSubmit={saveProfile} className="mt-6 space-y-4">
             <label className="block text-sm font-medium text-ink" htmlFor="profile-name">
               Full name

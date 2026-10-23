@@ -68,7 +68,10 @@ with a patient-type summary, a required Terms and Conditions acknowledgement,
 and links to the legal pages. Sign-in opens `/login` with password and Google
 options; there is no email-code sign-in option. Both account surfaces support email
 confirmation, session restoration, local sign-out, and editing the signed-in
-user's full name. FAQ, Terms and Conditions, and Privacy Notice are available
+user's full name. The signed-in account view links to `/patient/dashboard`.
+The dashboard uses the account's saved name and shows clearly labeled empty
+states for appointments, queues, payments, and medical requests; those services
+do not have data or actions yet. FAQ, Terms and Conditions, and Privacy Notice are available
 at `/faq`, `/terms`, and `/privacy`, with links from the landing page and signup
 footer. Their content is adapted from the original Desktop/e-OPD project's
 `client/src/pages/FaqPage.jsx` and `client/src/pages/legal/LegalPages.jsx`.
@@ -80,7 +83,7 @@ links to official privacy information. Legal pages carry a last-updated date;
 the FAQ has no legal effective-date line.
 
 The signup and sign-in pages support direct navigation and reloads. A static deployment
-must rewrite `/signup`, `/login`, `/reset-password`, `/faq`, `/terms`, and `/privacy` (including trailing-slash
+must rewrite `/signup`, `/login`, `/reset-password`, `/patient/dashboard`, `/faq`, `/terms`, and `/privacy` (including trailing-slash
 variants) to `/index.html` with status 200.
 
 The `public.profiles` table was created directly in the Supabase SQL Editor,

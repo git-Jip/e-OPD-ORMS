@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { LandingPage } from './pages/LandingPage'
 import { GOOGLE_SIGN_IN_RETURN_KEY } from './components/AuthPanel'
 import { LoginPage } from './pages/LoginPage'
@@ -8,6 +8,8 @@ import { FaqPage } from './pages/FaqPage'
 import { PrivacyPage, TermsPage } from './pages/legal/LegalPages'
 import { isPasswordRecoveryReturn, supabase } from './lib/supabase'
 import './App.css'
+
+const PatientDashboardPage = lazy(() => import('./pages/PatientDashboardPage').then((page) => ({ default: page.PatientDashboardPage })))
 
 function AuthReturn({ recovery = false }: { recovery?: boolean }) {
   useEffect(() => {
@@ -40,6 +42,10 @@ function App() {
         <SignUpPage />
       </>
     )
+  }
+
+  if (path === '/patient/dashboard') {
+    return <><a className="skip-link" href="#main-content">Skip to content</a><Suspense fallback={<main id="main-content" className="grid min-h-screen place-items-center">Loading dashboard…</main>}><PatientDashboardPage /></Suspense></>
   }
 
   if (!path && isPasswordRecoveryReturn) {
