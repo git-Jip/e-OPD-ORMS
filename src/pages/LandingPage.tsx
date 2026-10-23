@@ -74,12 +74,12 @@ function Tick() {
   );
 }
 
-export function LandingPage({ onUnavailable }: { onUnavailable: (page: string) => void }) {
+export function LandingPage() {
 
   return (
     <main className="landing-page min-h-screen overflow-x-hidden bg-white text-ink">
 
-      <PublicNavbar onUnavailable={onUnavailable} />
+      <PublicNavbar />
 
       <section id="main-content" tabIndex={-1} className={`public-header-offset ${section}`}>
 
@@ -94,18 +94,13 @@ export function LandingPage({ onUnavailable }: { onUnavailable: (page: string) =
             </h1>
 
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-ink-soft sm:text-xl">
-              The official outpatient portal for requesting appointments, following
-              queue updates, and managing OPD requests.
+              A simpler way to request appointments, follow queue updates, and prepare for your hospital visit.
             </p>
 
-            <div className="mt-8 flex flex-wrap gap-3">
-              <FeatureLink onUnavailable={onUnavailable} to="/signup" className="landing-cta text-center">
-                Register a visit
-              </FeatureLink>
-              <FeatureLink onUnavailable={onUnavailable} to="/login" className="landing-secondary text-center">
-                Sign in
-              </FeatureLink>
-            </div>
+            <FeatureLink to="/signup" className="landing-cta mt-8 inline-flex items-center justify-center">
+              Create Account
+            </FeatureLink>
+
           </div>
 
           <div className="-mx-5 overflow-hidden bg-canvas-muted sm:mx-0 sm:rounded-3xl lg:w-[50vw] lg:max-w-none lg:rounded-r-none">
@@ -226,19 +221,19 @@ export function LandingPage({ onUnavailable }: { onUnavailable: (page: string) =
           aria-label="Public pages"
           className="mt-4 flex flex-wrap justify-center gap-x-6 gap-y-2"
         >
-          <FeatureLink onUnavailable={onUnavailable}
+          <FeatureLink
             className="font-medium text-ink hover:text-accent-700"
             to="/terms"
           >
             Terms and Conditions
           </FeatureLink>
-          <FeatureLink onUnavailable={onUnavailable}
+          <FeatureLink
             className="font-medium text-ink hover:text-accent-700"
             to="/privacy"
           >
             Privacy Notice
           </FeatureLink>
-          <FeatureLink onUnavailable={onUnavailable} className="font-medium text-ink hover:text-accent-700" to="/faq">
+          <FeatureLink className="font-medium text-ink hover:text-accent-700" to="/faq">
             FAQ
           </FeatureLink>
         </nav>

@@ -9,7 +9,7 @@ const sections = [
   { label: 'Before you visit', href: '#before-you-visit' },
 ]
 
-export function PublicNavbar({ onUnavailable }: { onUnavailable: (page: string) => void }) {
+export function PublicNavbar({ showSections = true }: { showSections?: boolean }) {
   const [open, setOpen] = useState(false)
   const headerRef = useRef<HTMLElement>(null)
   const toggleRef = useRef<HTMLButtonElement>(null)
@@ -54,23 +54,20 @@ export function PublicNavbar({ onUnavailable }: { onUnavailable: (page: string) 
           <HospitalLogo plated={false} className="h-12 lg:h-14" />
         </a>
 
-        <nav aria-label="Site sections" className="hidden items-center gap-1 lg:flex">
+        {showSections && <nav aria-label="Site sections" className="hidden items-center gap-1 lg:flex">
           {sections.map((item) => (
             <a key={item.href} href={item.href} className="rounded-full px-4 py-2 text-sm font-medium text-ink transition hover:bg-black/5">
               {item.label}
             </a>
           ))}
-        </nav>
+        </nav>}
 
         <div className="flex items-center gap-1 sm:gap-2">
-          <FeatureLink to="/faq" onUnavailable={onUnavailable} className="hidden rounded-full px-4 py-2.5 text-sm font-semibold text-ink transition hover:bg-black/5 sm:inline-flex">
+          <FeatureLink to="/faq" className="hidden rounded-full px-4 py-2.5 text-sm font-semibold text-ink transition hover:bg-black/5 sm:inline-flex">
             FAQ
           </FeatureLink>
-          <FeatureLink to="/login" onUnavailable={onUnavailable} className="inline-flex rounded-full px-4 py-2.5 text-sm font-semibold text-ink transition hover:bg-black/5">
+          <FeatureLink to="/login" className="inline-flex rounded-full px-4 py-2.5 text-sm font-semibold text-ink transition hover:bg-black/5">
             Sign In
-          </FeatureLink>
-          <FeatureLink to="/signup" onUnavailable={onUnavailable} className="landing-cta hidden px-5 py-2.5 text-sm lg:inline-flex">
-            Get Started
           </FeatureLink>
           <button
             ref={toggleRef}
@@ -89,13 +86,16 @@ export function PublicNavbar({ onUnavailable }: { onUnavailable: (page: string) 
       {open && (
         <div id="public-navbar-panel" className="public-navbar-panel relative lg:hidden">
           <nav aria-label="Mobile site sections" className="mx-auto flex max-w-7xl flex-col gap-1 px-4 pb-4 pt-2 sm:px-6">
-            {sections.map((item) => (
+            {showSections && sections.map((item) => (
               <a key={item.href} href={item.href} onClick={() => setOpen(false)} className="rounded-xl px-4 py-3 text-base font-medium text-ink transition hover:bg-black/5">
                 {item.label}
               </a>
             ))}
-            <FeatureLink to="/faq" onUnavailable={onUnavailable} className="rounded-xl px-4 py-3 text-left text-base font-medium text-ink transition hover:bg-black/5">
+            <FeatureLink to="/faq" className="rounded-xl px-4 py-3 text-left text-base font-medium text-ink transition hover:bg-black/5">
               FAQ
+            </FeatureLink>
+            <FeatureLink to="/signup" className="landing-cta mt-2 text-center">
+              Create Account
             </FeatureLink>
           </nav>
         </div>
