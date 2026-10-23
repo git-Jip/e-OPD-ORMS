@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">Balayan Bayview Hospital and Medical Center</title>
+  <!-- White field, the hospital's orange cross, and the green swoosh beneath
+       it. Geometry is shared with src/components/common/BrandMark.jsx and the
+       icon generator; keep the three in step. -->
+  <rect width="512" height="512" rx="104" fill="#ffffff"/>
+  <path d="M60 430Q256 394 452 430Q256 442 60 430Z" fill="#00b040"/>
+  <g fill="#f87810" transform="translate(76.8 46) scale(0.7)">
+    <rect x="123" y="18" width="96" height="476" rx="32"/>
+    <rect x="123" y="18" width="263" height="206" rx="32"/>
+    <rect x="18" y="118" width="201" height="320" rx="32"/>
+    <rect x="18" y="168" width="475" height="56" rx="26"/>
+  </g>
+</svg>

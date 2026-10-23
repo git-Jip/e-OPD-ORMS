@@ -1,0 +1,53 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Manrope", "Segoe UI", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  --color-ink: #1d1d1f;
+  --color-ink-soft: #6e6e73;
+  --color-canvas: #ffffff;
+  --color-canvas-muted: #f5f5f7;
+  --color-hairline: #d2d2d7;
+  --color-brand-600: #007c2d;
+  --color-accent-600: #dd6108;
+  --color-accent-700: #b34d08;
+  --color-accent-cta: #c25400;
+}
+
+:root {
+  --eopd-header-h: 4.5rem;
+  --eopd-safe-top: env(safe-area-inset-top, 0px);
+  --eopd-header-total: calc(var(--eopd-header-h) + var(--eopd-safe-top));
+  font-family: var(--font-sans);
+  color: var(--color-ink-soft);
+  background: var(--color-canvas);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "liga" 1, "calt" 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color-scheme: light;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  font-family: inherit;
+  font-weight: 400;
+}
+
+button {
+  cursor: pointer;
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--color-accent-700);
+  outline-offset: 4px;
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --eopd-header-h: 5.5rem;
+  }
+}
